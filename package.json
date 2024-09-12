@@ -1,0 +1,24 @@
+{
+  "name": "gym_node_sql_api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Globulars/gym_node_sql_api.git"
+  },
+  "author": "Mudassir Mukhtar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Globulars/gym_node_sql_api/issues"
+  },
+  "homepage": "https://github.com/Globulars/gym_node_sql_api#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.0",
+    "mysql2": "^3.11.2",
+    "sequelize": "^6.37.3"
+  }
+}

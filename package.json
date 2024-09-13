@@ -17,6 +17,7 @@
   "homepage": "https://github.com/Globulars/gym_node_sql_api#readme",
   "description": "",
   "dependencies": {
+    "body-parser": "^1.20.3",
     "express": "^4.21.0",
     "mysql2": "^3.11.2",
     "sequelize": "^6.37.3"

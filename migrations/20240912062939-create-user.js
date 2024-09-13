@@ -10,10 +10,13 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       name: {
+        allowNull: false,
         type: Sequelize.STRING
       },
       email: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
       },
       phoneNo: {
         type: Sequelize.STRING
@@ -21,19 +24,21 @@ module.exports = {
       type: {
         type: Sequelize.STRING
       },
-      id: {
-        type: Sequelize.INTEGER
-      },
       profile: {
         type: Sequelize.STRING
       },
+      password: {
+        type: Sequelize.STRING,
+      },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
       }
     });
   },

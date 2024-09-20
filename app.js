@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 
-const authRoute = require('./routes/auth')
+const mainRoute = require('./routes/main')
 
 app.use(bodyParser.json());
-app.use("/auth", authRoute);
+app.use(mainRoute);
 
 // app.get('/', (req, res) => {
 //     res.send("Pakistan...");

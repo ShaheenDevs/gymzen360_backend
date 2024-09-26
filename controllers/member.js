@@ -1,76 +1,115 @@
-// const brcypt = require('bcryptjs')
-const { name } = require('body-parser');
-const models = require('../models')
+const models = require('../models');
 
-
-
+// Add a new member
 const addMember = async (req, res) => {
+    const { gymId, name, gender, phone, cnic, address, fee, advance, joiningDate, status, profileImage } = req.body;
+
     try {
-        // Check if the user already exists
-        const checkUser = await models.User.findOne({ where: { email: req.body.email } });
-
-        if (checkUser) {
-            return res.status(409).send({ result: checkUser, message: 'Email already registered' });
-        }
-
-        // Create new user
-        const user = {
-            name: req.body.name,
-            email: req.body.email,
-            type: req.body.type,
-            phoneNo: req.body.phoneNo,
-            profile: req.body.profile,
-            password: req.body.password,
+        const member = {
+            gymId,
+            name,
+            gender,
+            phone,
+            cnic,
+            address,
+            fee,
+            advance,
+            joiningDate,
+            status,
+            profileImage,
         };
 
-        const newUser = await models.User.create(user);
-        res.status(201).send({ message: "User signed up successfully", result: newUser, });
-    } catch (err) {
-        res.status(500).send({ message: "An error occurred while signing up", result: err.message, });
-    }
-}
-
-
-
-const getAllMember = async (req, res) => {
-    console.log(req.body.email);
-    const checkUser = await models.User.findOne({ email: req.body.email })
-    if (checkUser) {
-        // res.status(200).send({result:checkUser,message:'Login Successfully'});
-        // var checkPass = await brcypt.compare(req.body.password,checkUser.password)
-        // res.send(checkPass) ///Pass true and false
-        if (req.body.password == checkUser.password) {
-            res.status(200).send({ message: "Your are sign in successfully", result: checkUser, })
-        } else {
-            res.status(400).send({ message: "Your Password is incorrect", })
-        }
-    } else {
-        res.status(400).send({ message: 'Not User is registered with this Email', });
-    }
-}
-
-const deleteMember = async (req, res) => {
-    try {
-        // Find and delete the user by ID
-        const userId = req.params._id; // or req.body._id if coming from request body
-        const result = await models.User.destroy({
-            where: { id: userId }
+        const newMember = await models.Member.create(member);
+        return res.status(201).json({
+            message: "Member added successfully",
+            result: newMember,
         });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "An error occurred while adding the member",
+            error: err.message,
+        });
+    }
+};
 
-        if (result === 1) {
-            res.status(200).send({ message: 'Deleted Successfully' });
-        } else {
-            res.status(404).send({ message: 'Account not found' });
+// Get all members for a specific gym
+const getGymMembers = async (req, res) => {
+    const { gymId } = req.params;
+
+    try {
+        const members = await models.Member.findAll({ where: { gymId } });
+
+        if (members.length) {
+            return res.status(200).json({
+                message: "Members retrieved successfully",
+                result: members,
+            });
         }
+
+        return res.status(404).json({ message: 'No members found for this gym.' });
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: 'An error occurred while deleting the account', result: error });
+        return res.status(500).json({
+            message: "An error occurred while retrieving members",
+            error: error.message,
+        });
     }
-}
+};
 
+// Update an existing member
+const updateMember = async (req, res) => {
+    const { id: memberId } = req.params;
+    const { name, gender, phone, cnic, address, fee, advance, joiningDate, status, profileImage } = req.body;
+
+    try {
+        const [updated] = await models.Member.update(
+            { name, gender, phone, cnic, address, fee, advance, joiningDate, status, profileImage },
+            { where: { id: memberId } }
+        );
+
+        if (updated) {
+            const updatedMember = await models.Member.findByPk(memberId);
+            return res.status(200).json({
+                message: "Member updated successfully",
+                result: updatedMember,
+            });
+        }
+
+        return res.status(404).json({ message: 'Member not found' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'An error occurred while updating the member',
+            error: error.message,
+        });
+    }
+};
+
+// Delete a member
+const deleteMember = async (req, res) => {
+    const { id: memberId } = req.params;
+
+    try {
+        const result = await models.Member.destroy({ where: { id: memberId } });
+
+        if (result === 1) {
+            return res.status(200).json({ message: 'Member deleted successfully' });
+        }
+
+        return res.status(404).json({ message: 'Member not found' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'An error occurred while deleting the member',
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
-    addMember: addMember,
-    getAllMember: getAllMember,
-    deleteMember: deleteMember,
-}
+    addMember,
+    getGymMembers,
+    updateMember,
+    deleteMember,
+};

@@ -1,76 +1,110 @@
-// const brcypt = require('bcryptjs')
-const { name } = require('body-parser');
-const models = require('../models')
+const models = require('../models');
 
-
-
+// Add a new expense
 const addExpense = async (req, res) => {
+    const { gymId, title, amount, description, date, image } = req.body;
+
     try {
-        // Check if the user already exists
-        const checkUser = await models.User.findOne({ where: { email: req.body.email } });
-
-        if (checkUser) {
-            return res.status(409).send({ result: checkUser, message: 'Email already registered' });
-        }
-
-        // Create new user
-        const user = {
-            name: req.body.name,
-            email: req.body.email,
-            type: req.body.type,
-            phoneNo: req.body.phoneNo,
-            profile: req.body.profile,
-            password: req.body.password,
+        const expense = {
+            gymId,
+            title,
+            amount,
+            description,
+            date,
+            image,
         };
 
-        const newUser = await models.User.create(user);
-        res.status(201).send({ message: "User signed up successfully", result: newUser, });
-    } catch (err) {
-        res.status(500).send({ message: "An error occurred while signing up", result: err.message, });
-    }
-}
-
-
-
-const getAllExpense = async (req, res) => {
-    console.log(req.body.email);
-    const checkUser = await models.User.findOne({ email: req.body.email })
-    if (checkUser) {
-        // res.status(200).send({result:checkUser,message:'Login Successfully'});
-        // var checkPass = await brcypt.compare(req.body.password,checkUser.password)
-        // res.send(checkPass) ///Pass true and false
-        if (req.body.password == checkUser.password) {
-            res.status(200).send({ message: "Your are sign in successfully", result: checkUser, })
-        } else {
-            res.status(400).send({ message: "Your Password is incorrect", })
-        }
-    } else {
-        res.status(400).send({ message: 'Not User is registered with this Email', });
-    }
-}
-
-const deleteExpense = async (req, res) => {
-    try {
-        // Find and delete the user by ID
-        const userId = req.params._id; // or req.body._id if coming from request body
-        const result = await models.User.destroy({
-            where: { id: userId }
+        const newExpense = await models.Expense.create(expense);
+        return res.status(201).json({
+            message: "Expense added successfully",
+            result: newExpense,
         });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "An error occurred while adding the expense",
+            error: err.message,
+        });
+    }
+};
 
-        if (result === 1) {
-            res.status(200).send({ message: 'Deleted Successfully' });
-        } else {
-            res.status(404).send({ message: 'Account not found' });
+// Get all expenses for a specific gym
+const getGymExpenses = async (req, res) => {
+    const { gymId } = req.params;
+
+    try {
+        const expenses = await models.Expense.findAll({ where: { gymId } });
+
+        if (expenses.length) {
+            return res.status(200).json({
+                message: "Expenses retrieved successfully",
+                result: expenses,
+            });
         }
+
+        return res.status(404).json({ message: 'No expenses found for this gym.' });
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: 'An error occurred while deleting the account', result: error });
+        return res.status(500).json({
+            message: "An error occurred while retrieving expenses",
+            error: error.message,
+        });
     }
-}
+};
 
+// Update an existing expense
+const updateExpense = async (req, res) => {
+    const { id: expenseId } = req.params;
+    const { title, amount, description, date, image } = req.body;
+
+    try {
+        const [updated] = await models.Expense.update(
+            { title, amount, description, date, image },
+            { where: { id: expenseId } }
+        );
+
+        if (updated) {
+            const updatedExpense = await models.Expense.findByPk(expenseId);
+            return res.status(200).json({
+                message: "Expense updated successfully",
+                result: updatedExpense,
+            });
+        }
+
+        return res.status(404).json({ message: 'Expense not found' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'An error occurred while updating the expense',
+            error: error.message,
+        });
+    }
+};
+
+// Delete an expense
+const deleteExpense = async (req, res) => {
+    const { id: expenseId } = req.params;
+
+    try {
+        const result = await models.Expense.destroy({ where: { id: expenseId } });
+
+        if (result === 1) {
+            return res.status(200).json({ message: 'Expense deleted successfully' });
+        }
+
+        return res.status(404).json({ message: 'Expense not found' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'An error occurred while deleting the expense',
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
-    addExpense: addExpense,
-    getAllExpense: getAllExpense,
-    deleteExpense: deleteExpense,
-}
+    addExpense,
+    getGymExpenses,
+    updateExpense,
+    deleteExpense,
+};

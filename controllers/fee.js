@@ -1,76 +1,106 @@
-// const brcypt = require('bcryptjs')
-const { name } = require('body-parser');
-const models = require('../models')
-
-
+const models = require('../models');
 
 const addFee = async (req, res) => {
+    const { gymId, date, amount, paymentMethod, privateNote, status } = req.body;
+
     try {
-        // Check if the user already exists
-        const checkUser = await models.User.findOne({ where: { email: req.body.email } });
-
-        if (checkUser) {
-            return res.status(409).send({ result: checkUser, message: 'Email already registered' });
-        }
-
-        // Create new user
-        const user = {
-            name: req.body.name,
-            email: req.body.email,
-            type: req.body.type,
-            phoneNo: req.body.phoneNo,
-            profile: req.body.profile,
-            password: req.body.password,
+        const fee = {
+            gymId,
+            date,
+            amount,
+            paymentMethod,
+            privateNote,
+            status,
         };
 
-        const newUser = await models.User.create(user);
-        res.status(201).send({ message: "User signed up successfully", result: newUser, });
-    } catch (err) {
-        res.status(500).send({ message: "An error occurred while signing up", result: err.message, });
-    }
-}
-
-
-
-const getMemberFees = async (req, res) => {
-    console.log(req.body.email);
-    const checkUser = await models.User.findOne({ email: req.body.email })
-    if (checkUser) {
-        // res.status(200).send({result:checkUser,message:'Login Successfully'});
-        // var checkPass = await brcypt.compare(req.body.password,checkUser.password)
-        // res.send(checkPass) ///Pass true and false
-        if (req.body.password == checkUser.password) {
-            res.status(200).send({ message: "Your are sign in successfully", result: checkUser, })
-        } else {
-            res.status(400).send({ message: "Your Password is incorrect", })
-        }
-    } else {
-        res.status(400).send({ message: 'Not User is registered with this Email', });
-    }
-}
-
-const deleteFee = async (req, res) => {
-    try {
-        // Find and delete the user by ID
-        const userId = req.params._id; // or req.body._id if coming from request body
-        const result = await models.User.destroy({
-            where: { id: userId }
+        const newFee = await models.Fee.create(fee);
+        return res.status(201).json({
+            message: "Fee added successfully",
+            result: newFee,
         });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: "An error occurred while adding the fee",
+            error: err.message,
+        });
+    }
+};
 
-        if (result === 1) {
-            res.status(200).send({ message: 'Deleted Successfully' });
-        } else {
-            res.status(404).send({ message: 'Account not found' });
+const updateFee = async (req, res) => {
+    const { id: feeId } = req.params;
+    const { date, amount, paymentMethod, privateNote, status } = req.body;
+
+    try {
+        const [updated] = await models.Fee.update(
+            { date, amount, paymentMethod, privateNote, status },
+            { where: { id: feeId } }
+        );
+
+        if (updated) {
+            const updatedFee = await models.Fee.findByPk(feeId);
+            return res.status(200).json({
+                message: "Fee updated successfully",
+                result: updatedFee,
+            });
         }
+
+        return res.status(404).json({ message: 'Fee not found' });
     } catch (error) {
         console.error(error);
-        res.status(500).send({ message: 'An error occurred while deleting the account', result: error });
+        return res.status(500).json({
+            message: 'An error occurred while updating the fee',
+            error: error.message,
+        });
     }
-}
+};
 
+const getMemberFees = async (req, res) => {
+    const { gymId } = req.params;
+
+    try {
+        const fees = await models.Fee.findAll({ where: { gymId } });
+
+        if (fees.length) {
+            return res.status(200).json({
+                message: "Fees retrieved successfully",
+                result: fees,
+            });
+        }
+
+        return res.status(404).json({ message: 'No fees found for this gym.' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "An error occurred while retrieving fees",
+            error: error.message,
+        });
+    }
+};
+
+const deleteFee = async (req, res) => {
+    const { id: feeId } = req.params;
+
+    try {
+        const result = await models.Fee.destroy({ where: { id: feeId } });
+
+        if (result === 1) {
+            return res.status(200).json({ message: 'Fee deleted successfully' });
+        }
+
+        return res.status(404).json({ message: 'Fee not found' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'An error occurred while deleting the fee',
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
-    addFee: addFee,
-    getMemberFees: getMemberFees,
-    deleteFee: deleteFee,
-}
+    addFee,
+    updateFee,
+    getMemberFees,
+    deleteFee,
+};

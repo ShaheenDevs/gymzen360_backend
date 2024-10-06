@@ -1,7 +1,7 @@
 {
   "development": {
-    "username": "gymzenco_gymzenco_gymzenco_gym",
-    "password": "&geq=#sA_414",
+    "username": "gymzenco_admin",
+    "password": "xTgZg8FuA@AxhY@",
     "database": "gymzenco_gymzenco_gym",
     "host": "gymzen360.com",
     "dialect": "mysql",
@@ -17,10 +17,13 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+    "username": "gymzenco_admin",
+    "password": "xTgZg8FuA@AxhY@",
+    "database": "gymzenco_gymzenco_gym",
+    "host": "gymzen360.com",
+    "dialect": "mysql",
+    "dialectOptions": {
+      "connectTimeout": 60000
+    }
   }
 }

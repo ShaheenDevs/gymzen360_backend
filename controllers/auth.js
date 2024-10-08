@@ -1,8 +1,7 @@
-// const brcypt = require('bcryptjs')
+const brcypt = require('bcryptjs')
 const { name } = require('body-parser');
 const models = require('../models')
-
-
+const Validator = require("fastest-validator");
 
 const signUp = async (req, res) => {
     try {
@@ -20,9 +19,24 @@ const signUp = async (req, res) => {
             type: req.body.type,
             phoneNo: req.body.phoneNo,
             profile: req.body.profile,
-            password: req.body.password,
+            password: await brcypt.hash(req.body.password, 12),
+        };
+        const schema = {
+            name: { type: "string", optional: false, min: "5" },
+            email: { type: "string", optional: false, min: "10" },
+            type: { type: "string", optional: false },
+            password: { type: "string", optional: false, min: "8" },
         };
 
+        const v = new Validator();
+        const validationResponse = v.validate(user, schema);
+
+        if (validationResponse !== true) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: validationResponse
+            });
+        }
         const newUser = await models.User.create(user);
         res.status(201).send({ message: "User signed up successfully", result: newUser, });
     } catch (err) {
@@ -33,13 +47,29 @@ const signUp = async (req, res) => {
 
 
 const signIn = async (req, res) => {
-    console.log(req.body.email);
-    const checkUser = await models.User.findOne({ email: req.body.email })
+    const user = {
+        email: req.body.email,
+        password: req.body.password,
+    };
+    const schema = {
+        email: { type: "string", optional: false, },
+        password: { type: "string", optional: false, min: "8" },
+    };
+
+    const v = new Validator();
+    const validationResponse = v.validate(user, schema);
+
+    if (validationResponse !== true) {
+        return res.status(400).json({
+            message: "Validation failed",
+            errors: validationResponse
+        });
+    }
+
+    const checkUser = await models.User.findOne({ where: { email: req.body.email } });
     if (checkUser) {
-        // res.status(200).send({result:checkUser,message:'Login Successfully'});
-        // var checkPass = await brcypt.compare(req.body.password,checkUser.password)
-        // res.send(checkPass) ///Pass true and false
-        if (req.body.password == checkUser.password) {
+        var checkPass = await brcypt.compare(req.body.password, checkUser.password)
+        if (checkPass) {
             res.status(200).send({ message: "Your are sign in successfully", result: checkUser, })
         } else {
             res.status(400).send({ message: "Your Password is incorrect", })

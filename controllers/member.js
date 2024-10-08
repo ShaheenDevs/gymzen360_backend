@@ -5,7 +5,7 @@ const addMember = async (req, res) => {
     const { gymId, name, gender, phone, cnic, address, fee, advance, joiningDate, status, profileImage } = req.body;
 
     try {
-        const member = {
+        const newMember = await models.Member.create({
             gymId,
             name,
             gender,
@@ -17,18 +17,17 @@ const addMember = async (req, res) => {
             joiningDate,
             status,
             profileImage,
-        };
+        });
 
-        const newMember = await models.Member.create(member);
         return res.status(201).json({
             message: "Member added successfully",
-            result: newMember,
+            member: newMember,
         });
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error("Add Member Error:", error);
         return res.status(500).json({
             message: "An error occurred while adding the member",
-            error: err.message,
+            error: error.message,
         });
     }
 };
@@ -43,13 +42,13 @@ const getGymMembers = async (req, res) => {
         if (members.length) {
             return res.status(200).json({
                 message: "Members retrieved successfully",
-                result: members,
+                members,
             });
         }
 
-        return res.status(404).json({ message: 'No members found for this gym.' });
+        return res.status(404).json({ message: 'No members found for this gym' });
     } catch (error) {
-        console.error(error);
+        console.error("Get Members Error:", error);
         return res.status(500).json({
             message: "An error occurred while retrieving members",
             error: error.message,
@@ -72,15 +71,15 @@ const updateMember = async (req, res) => {
             const updatedMember = await models.Member.findByPk(memberId);
             return res.status(200).json({
                 message: "Member updated successfully",
-                result: updatedMember,
+                member: updatedMember,
             });
         }
 
         return res.status(404).json({ message: 'Member not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Update Member Error:", error);
         return res.status(500).json({
-            message: 'An error occurred while updating the member',
+            message: "An error occurred while updating the member",
             error: error.message,
         });
     }
@@ -91,17 +90,17 @@ const deleteMember = async (req, res) => {
     const { id: memberId } = req.params;
 
     try {
-        const result = await models.Member.destroy({ where: { id: memberId } });
+        const deleted = await models.Member.destroy({ where: { id: memberId } });
 
-        if (result === 1) {
+        if (deleted) {
             return res.status(200).json({ message: 'Member deleted successfully' });
         }
 
         return res.status(404).json({ message: 'Member not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Delete Member Error:", error);
         return res.status(500).json({
-            message: 'An error occurred while deleting the member',
+            message: "An error occurred while deleting the member",
             error: error.message,
         });
     }

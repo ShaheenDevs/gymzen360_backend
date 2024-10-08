@@ -1,106 +1,97 @@
-const brcypt = require('bcryptjs')
-const { name } = require('body-parser');
-const models = require('../models')
+const bcrypt = require('bcryptjs');
+const models = require('../models');
 const Validator = require("fastest-validator");
+
+const v = new Validator();
 
 const signUp = async (req, res) => {
     try {
+        const { name, email, type, phoneNo, profile, password } = req.body;
+
         // Check if the user already exists
-        const checkUser = await models.User.findOne({ where: { email: req.body.email } });
-
-        if (checkUser) {
-            return res.status(409).send({ result: checkUser, message: 'Email already registered' });
+        const existingUser = await models.User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(409).json({ message: 'Email is already registered', user: existingUser });
         }
 
-        // Create new user
-        const user = {
-            name: req.body.name,
-            email: req.body.email,
-            type: req.body.type,
-            phoneNo: req.body.phoneNo,
-            profile: req.body.profile,
-            password: await brcypt.hash(req.body.password, 12),
-        };
+        // Validate user input
+        const user = { name, email, type, phoneNo, profile, password };
         const schema = {
-            name: { type: "string", optional: false, min: "5" },
-            email: { type: "string", optional: false, min: "10" },
-            type: { type: "string", optional: false },
-            password: { type: "string", optional: false, min: "8" },
+            name: { type: "string", min: 5 },
+            email: { type: "string", min: 10 },
+            type: { type: "string" },
+            password: { type: "string", min: 8 },
         };
 
-        const v = new Validator();
         const validationResponse = v.validate(user, schema);
-
         if (validationResponse !== true) {
-            return res.status(400).json({
-                message: "Validation failed",
-                errors: validationResponse
-            });
+            return res.status(400).json({ message: "Validation failed", errors: validationResponse });
         }
+
+        // Hash the password and create the new user
+        user.password = await bcrypt.hash(password, 12);
         const newUser = await models.User.create(user);
-        res.status(201).send({ message: "User signed up successfully", result: newUser, });
-    } catch (err) {
-        res.status(500).send({ message: "An error occurred while signing up", result: err.message, });
+
+        res.status(201).json({ message: "User signed up successfully", user: newUser });
+    } catch (error) {
+        console.error("Sign-up error:", error);
+        res.status(500).json({ message: "An error occurred during sign-up", error: error.message });
     }
-}
-
-
+};
 
 const signIn = async (req, res) => {
-    const user = {
-        email: req.body.email,
-        password: req.body.password,
-    };
-    const schema = {
-        email: { type: "string", optional: false, },
-        password: { type: "string", optional: false, min: "8" },
-    };
+    try {
+        const { email, password } = req.body;
 
-    const v = new Validator();
-    const validationResponse = v.validate(user, schema);
-
-    if (validationResponse !== true) {
-        return res.status(400).json({
-            message: "Validation failed",
-            errors: validationResponse
-        });
-    }
-
-    const checkUser = await models.User.findOne({ where: { email: req.body.email } });
-    if (checkUser) {
-        var checkPass = await brcypt.compare(req.body.password, checkUser.password)
-        if (checkPass) {
-            res.status(200).send({ message: "Your are sign in successfully", result: checkUser, })
-        } else {
-            res.status(400).send({ message: "Your Password is incorrect", })
+        // Validate user input
+        const schema = {
+            email: { type: "string" },
+            password: { type: "string", min: 8 },
+        };
+        const validationResponse = v.validate({ email, password }, schema);
+        if (validationResponse !== true) {
+            return res.status(400).json({ message: "Validation failed", errors: validationResponse });
         }
-    } else {
-        res.status(400).send({ message: 'Not User is registered with this Email', });
+
+        // Check if the user exists
+        const user = await models.User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: 'No user registered with this email' });
+        }
+
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+
+        res.status(200).json({ message: "Signed in successfully", user });
+    } catch (error) {
+        console.error("Sign-in error:", error);
+        res.status(500).json({ message: "An error occurred during sign-in", error: error.message });
     }
-}
+};
 
 const delUser = async (req, res) => {
     try {
-        // Find and delete the user by ID
-        const userId = req.params._id; // or req.body._id if coming from request body
-        const result = await models.User.destroy({
-            where: { id: userId }
-        });
+        const userId = req.params.id;
 
-        if (result === 1) {
-            res.status(200).send({ message: 'Deleted Successfully' });
+        // Find and delete the user by ID
+        const deletionResult = await models.User.destroy({ where: { id: userId } });
+
+        if (deletionResult) {
+            return res.status(200).json({ message: 'Account deleted successfully' });
         } else {
-            res.status(404).send({ message: 'Account not found' });
+            return res.status(404).json({ message: 'Account not found' });
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ message: 'An error occurred while deleting the account', result: error });
+        console.error("Delete user error:", error);
+        res.status(500).json({ message: 'An error occurred while deleting the account', error: error.message });
     }
-}
-
+};
 
 module.exports = {
-    signIn: signIn,
-    signUp: signUp,
-    delUser: delUser,
-}
+    signUp,
+    signIn,
+    delUser,
+};

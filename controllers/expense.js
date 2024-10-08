@@ -5,25 +5,24 @@ const addExpense = async (req, res) => {
     const { gymId, title, amount, description, date, image } = req.body;
 
     try {
-        const expense = {
+        const newExpense = await models.Expense.create({
             gymId,
             title,
             amount,
             description,
             date,
             image,
-        };
+        });
 
-        const newExpense = await models.Expense.create(expense);
         return res.status(201).json({
             message: "Expense added successfully",
-            result: newExpense,
+            expense: newExpense,
         });
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error("Add Expense Error:", error);
         return res.status(500).json({
             message: "An error occurred while adding the expense",
-            error: err.message,
+            error: error.message,
         });
     }
 };
@@ -38,13 +37,13 @@ const getGymExpenses = async (req, res) => {
         if (expenses.length) {
             return res.status(200).json({
                 message: "Expenses retrieved successfully",
-                result: expenses,
+                expenses,
             });
         }
 
-        return res.status(404).json({ message: 'No expenses found for this gym.' });
+        return res.status(404).json({ message: 'No expenses found for this gym' });
     } catch (error) {
-        console.error(error);
+        console.error("Get Expenses Error:", error);
         return res.status(500).json({
             message: "An error occurred while retrieving expenses",
             error: error.message,
@@ -67,13 +66,13 @@ const updateExpense = async (req, res) => {
             const updatedExpense = await models.Expense.findByPk(expenseId);
             return res.status(200).json({
                 message: "Expense updated successfully",
-                result: updatedExpense,
+                expense: updatedExpense,
             });
         }
 
         return res.status(404).json({ message: 'Expense not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Update Expense Error:", error);
         return res.status(500).json({
             message: 'An error occurred while updating the expense',
             error: error.message,
@@ -86,15 +85,15 @@ const deleteExpense = async (req, res) => {
     const { id: expenseId } = req.params;
 
     try {
-        const result = await models.Expense.destroy({ where: { id: expenseId } });
+        const deleted = await models.Expense.destroy({ where: { id: expenseId } });
 
-        if (result === 1) {
+        if (deleted) {
             return res.status(200).json({ message: 'Expense deleted successfully' });
         }
 
         return res.status(404).json({ message: 'Expense not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Delete Expense Error:", error);
         return res.status(500).json({
             message: 'An error occurred while deleting the expense',
             error: error.message,

@@ -5,24 +5,23 @@ const addIncome = async (req, res) => {
     const { gymId, title, amount, description, date } = req.body;
 
     try {
-        const income = {
+        const newIncome = await models.Income.create({
             gymId,
             title,
             amount,
             description,
             date,
-        };
+        });
 
-        const newIncome = await models.Income.create(income);
         return res.status(201).json({
             message: "Income added successfully",
-            result: newIncome,
+            income: newIncome,
         });
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error("Add Income Error:", error);
         return res.status(500).json({
             message: "An error occurred while adding the income",
-            error: err.message,
+            error: error.message,
         });
     }
 };
@@ -37,13 +36,13 @@ const getGymIncomes = async (req, res) => {
         if (incomes.length) {
             return res.status(200).json({
                 message: "Incomes retrieved successfully",
-                result: incomes,
+                incomes,
             });
         }
 
-        return res.status(404).json({ message: 'No incomes found for this gym.' });
+        return res.status(404).json({ message: 'No incomes found for this gym' });
     } catch (error) {
-        console.error(error);
+        console.error("Get Incomes Error:", error);
         return res.status(500).json({
             message: "An error occurred while retrieving incomes",
             error: error.message,
@@ -66,15 +65,15 @@ const updateIncome = async (req, res) => {
             const updatedIncome = await models.Income.findByPk(incomeId);
             return res.status(200).json({
                 message: "Income updated successfully",
-                result: updatedIncome,
+                income: updatedIncome,
             });
         }
 
         return res.status(404).json({ message: 'Income not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Update Income Error:", error);
         return res.status(500).json({
-            message: 'An error occurred while updating the income',
+            message: "An error occurred while updating the income",
             error: error.message,
         });
     }
@@ -85,17 +84,17 @@ const deleteIncome = async (req, res) => {
     const { id: incomeId } = req.params;
 
     try {
-        const result = await models.Income.destroy({ where: { id: incomeId } });
+        const deleted = await models.Income.destroy({ where: { id: incomeId } });
 
-        if (result === 1) {
+        if (deleted) {
             return res.status(200).json({ message: 'Income deleted successfully' });
         }
 
         return res.status(404).json({ message: 'Income not found' });
     } catch (error) {
-        console.error(error);
+        console.error("Delete Income Error:", error);
         return res.status(500).json({
-            message: 'An error occurred while deleting the income',
+            message: "An error occurred while deleting the income",
             error: error.message,
         });
     }

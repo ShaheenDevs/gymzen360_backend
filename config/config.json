@@ -1,13 +1,10 @@
 {
   "development": {
-    "username": "gymzenco_admin",
-    "password": "xTgZg8FuA@AxhY@",
-    "database": "gymzenco_gymzenco_gym",
-    "host": "gymzen360.com",
-    "dialect": "mysql",
-    "dialectOptions": {
-      "connectTimeout": 60000
-    }
+    "username": "root",
+    "password": null,
+    "database": "gym",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
   },
   "test": {
     "username": "root",

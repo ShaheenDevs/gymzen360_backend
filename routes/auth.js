@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/signIn', authCtrl.signIn);
 router.post('/signUp', authCtrl.signUp);
-router.delete('/delUser/:_id', authCtrl.delUser);
+router.delete('/delUser/:id', authCtrl.delUser);
 
 module.exports = router;

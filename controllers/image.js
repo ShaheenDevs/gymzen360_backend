@@ -1,4 +1,3 @@
-const models = require('../models');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -16,9 +15,9 @@ const storage = multer.diskStorage({
 const uploadSingle = multer({ storage }).single('image');
 const uploadMultiple = multer({ storage }).array('images', 10);
 
-// Add a new single image
+// Add a new single image (without saving to database)
 const addSingleImage = (req, res) => {
-    uploadSingle(req, res, async (err) => {
+    uploadSingle(req, res, (err) => {
         if (err) {
             console.error("Add Image Error:", err);
             return res.status(500).json({
@@ -27,29 +26,17 @@ const addSingleImage = (req, res) => {
             });
         }
 
-        try {
-            const newImage = await models.Image.create({
-                gymId: req.body.gymId,
-                imagePath: req.file.path,
-            });
-
-            return res.status(201).json({
-                message: "Image uploaded successfully",
-                image: newImage,
-            });
-        } catch (error) {
-            console.error("Add Image Error:", error);
-            return res.status(500).json({
-                message: "An error occurred while saving the image",
-                error: error.message,
-            });
-        }
+        const imagePath = req.file.path;
+        return res.status(201).json({
+            message: "Image uploaded successfully",
+            imagePath: imagePath,
+        });
     });
 };
 
-// Add multiple images
+// Add multiple images (without saving to database)
 const addMultipleImages = (req, res) => {
-    uploadMultiple(req, res, async (err) => {
+    uploadMultiple(req, res, (err) => {
         if (err) {
             console.error("Add Images Error:", err);
             return res.status(500).json({
@@ -58,30 +45,19 @@ const addMultipleImages = (req, res) => {
             });
         }
 
-        try {
-            const imagesData = req.files.map(file => ({
-                gymId: req.body.gymId,
-                imagePath: file.path,
-            }));
-            const newImages = await models.Image.bulkCreate(imagesData);
-
-            return res.status(201).json({
-                message: "Images uploaded successfully",
-                images: newImages,
-            });
-        } catch (error) {
-            console.error("Add Images Error:", error);
-            return res.status(500).json({
-                message: "An error occurred while saving the images",
-                error: error.message,
-            });
-        }
+        const imagesPaths = req.files.map(file => file.path);
+        return res.status(201).json({
+            message: "Images uploaded successfully",
+            imagesPaths: imagesPaths,
+        });
     });
 };
 
-// Update an existing image
+// Update an existing image (replace the old file with the new one)
 const updateImage = (req, res) => {
-    uploadSingle(req, res, async (err) => {
+    const { filename } = req.params;
+
+    uploadSingle(req, res, (err) => {
         if (err) {
             console.error("Update Image Error:", err);
             return res.status(500).json({
@@ -90,73 +66,41 @@ const updateImage = (req, res) => {
             });
         }
 
-        const { id: imageId } = req.params;
+        const newImagePath = req.file.path;
+        const oldImagePath = path.join('uploads', filename);
 
-        try {
-            const image = await models.Image.findByPk(imageId);
-            if (!image) {
-                return res.status(404).json({ message: 'Image not found' });
+        // Delete old image file if it exists
+        fs.unlink(oldImagePath, (unlinkErr) => {
+            if (unlinkErr) {
+                console.error("Old Image Delete Error:", unlinkErr);
+                // Continue processing even if deleting the old file fails
             }
 
-            // Delete old image file
-            fs.unlink(image.imagePath, async (err) => {
-                if (err) console.error("Old Image Delete Error:", err);
-
-                // Update image path in database
-                await models.Image.update(
-                    { imagePath: req.file.path },
-                    { where: { id: imageId } }
-                );
-
-                const updatedImage = await models.Image.findByPk(imageId);
-
-                return res.status(200).json({
-                    message: "Image updated successfully",
-                    image: updatedImage,
-                });
+            return res.status(200).json({
+                message: "Image updated successfully",
+                newImagePath: newImagePath,
+                oldImageDeleted: !unlinkErr
             });
-        } catch (error) {
-            console.error("Update Image Error:", error);
-            return res.status(500).json({
-                message: "An error occurred while updating the image",
-                error: error.message,
-            });
-        }
+        });
     });
 };
 
-// Delete an image
-const deleteImage = async (req, res) => {
-    const { id: imageId } = req.params;
+// Delete an image by filename
+const deleteImage = (req, res) => {
+    const { filename } = req.params;
+    const imagePath = path.join('uploads', filename);
 
-    try {
-        const image = await models.Image.findByPk(imageId);
-        if (!image) {
-            return res.status(404).json({ message: 'Image not found' });
+    fs.unlink(imagePath, (err) => {
+        if (err) {
+            console.error("Delete Image Error:", err);
+            return res.status(404).json({
+                message: "Image not found or could not be deleted",
+                error: err.message,
+            });
         }
 
-        // Delete image file
-        fs.unlink(image.imagePath, async (err) => {
-            if (err) {
-                console.error("Delete Image Error:", err);
-                return res.status(500).json({
-                    message: "An error occurred while deleting the image file",
-                    error: err.message,
-                });
-            }
-
-            // Remove image from database
-            await models.Image.destroy({ where: { id: imageId } });
-
-            return res.status(200).json({ message: 'Image deleted successfully' });
-        });
-    } catch (error) {
-        console.error("Delete Image Error:", error);
-        return res.status(500).json({
-            message: "An error occurred while deleting the image",
-            error: error.message,
-        });
-    }
+        return res.status(200).json({ message: 'Image deleted successfully' });
+    });
 };
 
 module.exports = {

@@ -9,10 +9,10 @@ router.post('/addSingleImage', imageCtrl.addSingleImage);
 // Add multiple images
 router.post('/addMultipleImages', imageCtrl.addMultipleImages);
 
-// Update an existing image
-router.put('/updateImage/:id', imageCtrl.updateImage);
+// Update an existing image by filename
+router.put('/updateImage/:filename', imageCtrl.updateImage);
 
-// Delete an image
-router.delete('/deleteImage/:id', imageCtrl.deleteImage);
+// Delete an image by filename
+router.delete('/deleteImage/:filename', imageCtrl.deleteImage);
 
 module.exports = router;

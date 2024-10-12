@@ -6,6 +6,9 @@ const router = express.Router();
 // Create a new member
 router.post('/addMember', memberCtrl.addMember);
 
+// Get single member data
+router.get('/getSingleMember/:memberId', memberCtrl.getSingleMember);
+
 // Get all members for a specific gym
 router.get('/getGymMembers/:gymId', memberCtrl.getGymMembers);
 

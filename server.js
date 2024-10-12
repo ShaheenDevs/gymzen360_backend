@@ -3,8 +3,9 @@ const bodyParser = require('body-parser');
 const app = express();
 const mainRoute = require('./routes/main');
 const port = process.env.PORT || 3000;
-const multer = require('multer');
 const path = require('path');
+const sequelize = require('./models').sequelize;
+
 
 // Use body-parser middleware
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -20,8 +21,14 @@ app.get('/', (req, res) => {
     res.send('GYM ON is Running');
 });
 
-app.post('/pk', (req, res) => {
+app.post('/', (req, res) => {
     res.send(req.body);
+});
+
+sequelize.sync({ alter: true }).then(() => {
+    console.log('Database synchronized');
+}).catch(error => {
+    console.error('Error synchronizing the database:', error);
 });
 
 // Start the server

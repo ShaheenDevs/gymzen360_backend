@@ -2,11 +2,12 @@ const models = require('../models');
 
 // Add a new fee
 const addFee = async (req, res) => {
-    const { gymId, date, amount, paymentMethod, privateNote, status } = req.body;
+    const { gymId, memberId, date, amount, paymentMethod, privateNote, status } = req.body;
 
     try {
         const newFee = await models.Fee.create({
             gymId,
+            memberId,
             date,
             amount,
             paymentMethod,
@@ -30,11 +31,11 @@ const addFee = async (req, res) => {
 // Update an existing fee
 const updateFee = async (req, res) => {
     const { id: feeId } = req.params;
-    const { date, amount, paymentMethod, privateNote, status } = req.body;
+    const { date, amount, paymentMethod, privateNote, status, memberId } = req.body;
 
     try {
         const [updated] = await models.Fee.update(
-            { date, amount, paymentMethod, privateNote, status },
+            { date, amount, paymentMethod, privateNote, status, memberId },
             { where: { id: feeId } }
         );
 
@@ -57,7 +58,7 @@ const updateFee = async (req, res) => {
 };
 
 // Get all fees for a specific gym
-const getMemberFees = async (req, res) => {
+const getGymFees = async (req, res) => {
     const { gymId } = req.params;
 
     try {
@@ -79,6 +80,31 @@ const getMemberFees = async (req, res) => {
         });
     }
 };
+
+// Get all fees for a specific user
+const getMemberFees = async (req, res) => {
+    const { memberId } = req.params;
+
+    try {
+        const fees = await models.Fee.findAll({ where: { memberId } });
+
+        if (fees.length) {
+            return res.status(200).json({
+                message: "Fees retrieved successfully",
+                fees,
+            });
+        }
+
+        return res.status(404).json({ message: 'No fees found for this user' });
+    } catch (error) {
+        console.error("Get User Fees Error:", error);
+        return res.status(500).json({
+            message: "An error occurred while retrieving user fees",
+            error: error.message,
+        });
+    }
+};
+
 
 // Delete a fee
 const deleteFee = async (req, res) => {
@@ -104,6 +130,7 @@ const deleteFee = async (req, res) => {
 module.exports = {
     addFee,
     updateFee,
+    getGymFees,
     getMemberFees,
     deleteFee,
 };

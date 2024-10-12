@@ -32,6 +32,31 @@ const addMember = async (req, res) => {
     }
 };
 
+// Get single member data
+const getSingleMember = async (req, res) => {
+    const { memberId } = req.params;
+
+    try {
+        // Use findByPk without a where clause for primary key look-up
+        const member = await models.Member.findByPk(memberId);
+
+        if (member) {
+            return res.status(200).json({
+                message: "Member retrieved successfully",
+                member, // changed to single member
+            });
+        }
+
+        return res.status(404).json({ message: 'Member not found' });
+    } catch (error) {
+        console.error("Get Member Error:", error);
+        return res.status(500).json({
+            message: "An error occurred while retrieving the member",
+            error: error.message,
+        });
+    }
+};
+
 // Get all members for a specific gym
 const getGymMembers = async (req, res) => {
     const { gymId } = req.params;
@@ -108,6 +133,7 @@ const deleteMember = async (req, res) => {
 
 module.exports = {
     addMember,
+    getSingleMember,
     getGymMembers,
     updateMember,
     deleteMember,

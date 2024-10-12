@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   Fee.init({
     gymId: DataTypes.STRING,
+    memberId: DataTypes.STRING,
     date: DataTypes.DATE,
     amount: DataTypes.DECIMAL,
     paymentMethod: DataTypes.STRING,

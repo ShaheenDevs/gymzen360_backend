@@ -4,7 +4,9 @@ const app = express();
 const mainRoute = require('./routes/main');
 const port = process.env.PORT || 3000;
 const path = require('path');
+const cron = require('node-cron');
 const sequelize = require('./models').sequelize;
+const { addMonthlyFee } = require('./controllers/fee');
 
 
 // Use body-parser middleware
@@ -30,6 +32,9 @@ sequelize.sync({ alter: true }).then(() => {
 }).catch(error => {
     console.error('Error synchronizing the database:', error);
 });
+
+// Schedule the cron job to run on the first day of each month at midnight
+cron.schedule('0 0 1 * *', addMonthlyFee);
 
 // Start the server
 app.listen(port, () => {

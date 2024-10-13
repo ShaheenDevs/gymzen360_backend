@@ -126,6 +126,48 @@ const deleteFee = async (req, res) => {
         });
     }
 };
+const addMonthlyFee = async () => {
+    try {
+        // Get all members
+        const members = await models.Member.findAll();
+
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+
+        // Iterate over each member and check if a fee for the current month already exists
+        for (const member of members) {
+            const existingFee = await models.Fee.findOne({
+                where: {
+                    memberId: member.id,
+                    gymId: member.gymId,
+                    date: {
+                        [models.Sequelize.Op.gte]: new Date(currentYear, currentMonth, 1),
+                        [models.Sequelize.Op.lt]: new Date(currentYear, currentMonth + 1, 1)
+                    }
+                }
+            });
+
+            // If no fee exists for the current month, add it
+            if (!existingFee) {
+                await models.Fee.create({
+                    gymId: member.gymId,
+                    memberId: member.id,
+                    date: new Date(currentYear, currentMonth, 1), // First day of the current month
+                    amount: member.fee,
+                    paymentMethod: 'auto',
+                    privateNote: 'Monthly auto-generated fee',
+                    status: 'unpaid'
+                });
+                console.log(`Fee added for member ID: ${member.id} for ${currentYear}-${currentMonth + 1}`);
+            } else {
+                console.log(`Fee already exists for member ID: ${member.id} for ${currentYear}-${currentMonth + 1}`);
+            }
+        }
+    } catch (error) {
+        console.error("Error adding monthly fees:", error);
+    }
+};
 
 module.exports = {
     addFee,
@@ -133,4 +175,5 @@ module.exports = {
     getGymFees,
     getMemberFees,
     deleteFee,
+    addMonthlyFee,
 };

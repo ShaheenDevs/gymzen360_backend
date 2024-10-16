@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const models = require('../models');
+var jwt = require('jsonwebtoken');
 const Validator = require("fastest-validator");
 
 const v = new Validator();
@@ -64,8 +65,23 @@ const signIn = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ message: "Incorrect password" });
         }
-
-        res.status(200).json({ message: "Signed in successfully", user });
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                email: user.email
+            },
+            'secret',
+            { expiresIn: '1d' }
+        );
+        res.status(200).json({
+            message: "Signed in successfully",
+            user: {
+                id: user.id,
+                email: user.email,
+                expiresIn: "1 day",
+                token: token,
+            },
+        });
     } catch (error) {
         console.error("Sign-in error:", error);
         res.status(500).json({ message: "An error occurred during sign-in", error: error.message });

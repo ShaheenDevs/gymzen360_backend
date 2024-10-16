@@ -6,12 +6,13 @@ const feeRouter = require('./fee')
 const incomeRouter = require('./income')
 const memberRouter = require('./member')
 const imageRouter = require('./image')
+const checkAuth = require('../middleware/check_auth')
 
 router.use('/auth', authRouter)
-router.use('/expense', expenseRouter)
-router.use('/fee', feeRouter)
-router.use('/income', incomeRouter)
-router.use('/member', memberRouter)
-router.use('/image', imageRouter)
+router.use('/expense', checkAuth, expenseRouter)
+router.use('/fee', checkAuth, feeRouter)
+router.use('/income', checkAuth, incomeRouter)
+router.use('/member', checkAuth, memberRouter)
+router.use('/image', checkAuth, imageRouter)
 
 module.exports = router;

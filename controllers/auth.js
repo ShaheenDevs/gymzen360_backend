@@ -76,12 +76,11 @@ const signIn = async (req, res) => {
         );
         res.status(200).json({
             message: "Signed in successfully",
-            user: {
-                id: user.id,
-                email: user.email,
-                expiresIn: "1 day",
-                token: token,
-            },
+            data: {
+                ...user.toJSON(),
+                expiresIn: "1d",
+                token: token
+            }
         });
     } catch (error) {
         console.error("Sign-in error:", error);
@@ -107,8 +106,50 @@ const delUser = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    try {
+        const { id, name, email, type, phoneNo, profile, password } = req.body;
+
+        // Find the user by ID
+        const user = await models.User.findOne({ where: { id: id } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Validate the updated input
+        const updatedData = { name, email, type, phoneNo, profile };
+        const schema = {
+            name: { type: "string", min: 5, optional: true },
+            email: { type: "string", min: 10, optional: true },
+            type: { type: "string", optional: true },
+            phoneNo: { type: "string", optional: true },
+            profile: { type: "string", optional: true },
+            password: { type: "string", min: 8, optional: true }
+        };
+
+        const validationResponse = v.validate(updatedData, schema);
+        if (validationResponse !== true) {
+            return res.status(400).json({ message: "Validation failed", errors: validationResponse });
+        }
+
+        // If a password is provided, hash it
+        if (password) {
+            updatedData.password = await bcrypt.hash(password, 12);
+        }
+
+        // Update the user with the new data
+        await user.update(updatedData);
+
+        res.status(200).json({ message: "Profile updated successfully", user });
+    } catch (error) {
+        console.error("Update profile error:", error);
+        res.status(500).json({ message: 'An error occurred while updating the profile', error: error.message });
+    }
+};
+
 module.exports = {
     signUp,
     signIn,
     delUser,
+    updateProfile,
 };

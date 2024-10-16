@@ -62,7 +62,10 @@ const getGymFees = async (req, res) => {
     const { gymId } = req.params;
 
     try {
-        const fees = await models.Fee.findAll({ where: { gymId } });
+        const fees = await models.Fee.findAll({
+            where: { gymId },
+            include: [{ model: models.Member, as: 'member' }]
+        });
 
         if (fees.length) {
             return res.status(200).json({
@@ -81,7 +84,7 @@ const getGymFees = async (req, res) => {
     }
 };
 
-// Get all fees for a specific user
+// Get all fees for a specific member
 const getMemberFees = async (req, res) => {
     const { memberId } = req.params;
 
@@ -97,15 +100,13 @@ const getMemberFees = async (req, res) => {
 
         return res.status(404).json({ message: 'No fees found for this user' });
     } catch (error) {
-        console.error("Get User Fees Error:", error);
+        console.error("Get Member Fees Error:", error);
         return res.status(500).json({
-            message: "An error occurred while retrieving user fees",
+            message: "An error occurred while retrieving member fees",
             error: error.message,
         });
     }
 };
-
-
 // Delete a fee
 const deleteFee = async (req, res) => {
     const { id: feeId } = req.params;
@@ -126,6 +127,8 @@ const deleteFee = async (req, res) => {
         });
     }
 };
+
+// Add monthly fee for all members
 const addMonthlyFee = async () => {
     try {
         // Get all members
@@ -153,7 +156,7 @@ const addMonthlyFee = async () => {
                 await models.Fee.create({
                     gymId: member.gymId,
                     memberId: member.id,
-                    date: new Date(currentYear, currentMonth, 1), // First day of the current month
+                    date: new Date(currentYear, currentMonth, 1),
                     amount: member.fee,
                     paymentMethod: 'auto',
                     privateNote: 'Monthly auto-generated fee',

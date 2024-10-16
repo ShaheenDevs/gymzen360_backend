@@ -65,12 +65,13 @@ const signIn = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ message: "Incorrect password" });
         }
+        console.log('JWT Secret:', process.env.JWT_SECRET);
         const token = jwt.sign(
             {
                 userId: user.id,
                 email: user.email
             },
-            'secret',
+            process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
         res.status(200).json({

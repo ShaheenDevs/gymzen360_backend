@@ -1,27 +1,32 @@
 const bcrypt = require('bcryptjs');
 const models = require('../models');
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const Validator = require("fastest-validator");
 
 const v = new Validator();
 
 const signUp = async (req, res) => {
     try {
-        const { name, email, type, phoneNo, profile, password } = req.body;
+        const { name, email, type, phoneNo, profile, password, gymSize, country, adress } = req.body;
 
         // Check if the user already exists
         const existingUser = await models.User.findOne({ where: { email } });
         if (existingUser) {
-            return res.status(409).json({ message: 'Email is already registered', user: existingUser });
+            return res.status(409).json({ message: 'Email is already registered' });
         }
 
         // Validate user input
-        const user = { name, email, type, phoneNo, profile, password };
+        const user = { name, email, type, phoneNo, profile, password, gymSize, country, adress };
         const schema = {
             name: { type: "string", min: 5 },
             email: { type: "string", min: 10 },
             type: { type: "string" },
+            phoneNo: { type: "string", optional: true },
+            profile: { type: "string", optional: true },
             password: { type: "string", min: 8 },
+            gymSize: { type: "string", optional: true },
+            country: { type: "string", optional: true },
+            adress: { type: "string", optional: true },
         };
 
         const validationResponse = v.validate(user, schema);
@@ -108,23 +113,26 @@ const delUser = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        const { id, name, email, type, phoneNo, profile, password } = req.body;
+        const { id, name, email, type, phoneNo, profile, password, gymSize, country, adress } = req.body;
 
         // Find the user by ID
-        const user = await models.User.findOne({ where: { id: id } });
+        const user = await models.User.findOne({ where: { id } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         // Validate the updated input
-        const updatedData = { name, email, type, phoneNo, profile };
+        const updatedData = { name, email, type, phoneNo, profile, password, gymSize, country, adress };
         const schema = {
             name: { type: "string", min: 5, optional: true },
             email: { type: "string", min: 10, optional: true },
             type: { type: "string", optional: true },
             phoneNo: { type: "string", optional: true },
             profile: { type: "string", optional: true },
-            password: { type: "string", min: 8, optional: true }
+            password: { type: "string", min: 8, optional: true },
+            gymSize: { type: "string", optional: true },
+            country: { type: "string", optional: true },
+            adress: { type: "string", optional: true },
         };
 
         const validationResponse = v.validate(updatedData, schema);

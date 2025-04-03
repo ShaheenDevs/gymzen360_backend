@@ -45,8 +45,8 @@ sequelize.sync({ alter: true }).then(() => {
     console.error('Error synchronizing the database:', error);
 });
 
-// Schedule the cron job to run on the first day of each month at midnight
-cron.schedule('0 0 1 * *', addMonthlyFee);
+// If you need it to run at a specific time daily (e.g., 3 AM), update it accordingly:
+cron.schedule('0 3 * * *', addMonthlyFee);
 
 // Start the server
 app.listen(port, () => {

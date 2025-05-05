@@ -57,13 +57,19 @@ const updateFee = async (req, res) => {
     }
 };
 
-// Get all fees for a specific gym
+// Get all fees for a specific gym, with optional status filter
 const getGymFees = async (req, res) => {
     const { gymId } = req.params;
+    const { status } = req.query; // optional status filter
 
     try {
+        const whereClause = { gymId };
+        if (status) {
+            whereClause.status = status;
+        }
+
         const fees = await models.Fee.findAll({
-            where: { gymId },
+            where: whereClause,
             include: [{ model: models.Member, as: 'member' }]
         });
 
@@ -83,6 +89,7 @@ const getGymFees = async (req, res) => {
         });
     }
 };
+
 
 // Get all fees for a specific member
 const getMemberFees = async (req, res) => {
